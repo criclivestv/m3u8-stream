@@ -1,50 +1,37 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Video Player</title>
-    <script src="https://content.jwplatform.com/libraries/KB5zFt7A.js"></script>
-    <style>
-        body { margin: 0; background-color: #000; }
-        #videoPlayer { width: 100%; height: 100vh; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JW Player</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jwplayer.com/libraries/ABCDEFGHIJKLMOPQ.js"></script>
+  <script>jwplayer.key = "eNFaXCjyURVoCCGiHp7HTQ3hDhE/AfL0g8VE1fRbL84=";</script>
 </head>
-<body>
-    <div id="videoPlayer">Loading player...</div>
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const videoUrl = urlParams.get('url');
-        const vastTag = urlParams.get('ad') || "https://droopy-management.com/d.muFNzod/G-NrvUZgGbUS/leamt9WuaZAUqlZkIPRTzY/1gMozhcay/NODSM/tZNdjFUlzFNhzRI/0_N/CtZ/sFaxWW1ypNdyD/0/xS";
+<body class="player-page">
+  <div id="myPlayer"></div>
 
-        jwplayer("videoPlayer").setup({
-            file: videoUrl,
-            advertising: {
-                client: "vast",
-                tag: vastTag
-            },
-            autostart: true,
-            width: "100%",
-            aspectratio: "16:9"
-        });
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const stream = urlParams.get("url");
+    const vast = urlParams.get("vast") || "https://droopy-management.com/d.muFNzod/G-NrvUZgGbUS/leamt9WuaZAUqlZkIPRTzY/1gMozhcay/NODSM/tZNdjFUlzFNhzRI/0_N/CtZ/sFaxWW1ypNdyD/0/xS";
 
-        // Wake Lock API
-        let wakeLock = null;
-        async function requestWakeLock() {
-            try {
-                wakeLock = await navigator.wakeLock.request('screen');
-                wakeLock.addEventListener('release', () => {
-                    console.log('Wake Lock was released');
-                });
-                console.log('Wake Lock is active');
-            } catch (err) {
-                console.error(`${err.name}, ${err.message}`);
-            }
-        }
-
-        jwplayer().on('play', () => {
-            requestWakeLock();
-        });
-    </script>
+    jwplayer("myPlayer").setup({
+      file: stream,
+      autostart: true,
+      mute: false,
+      width: "100%",
+      height: "100%",
+      advertising: {
+        client: "vast",
+        tag: vast
+      },
+      logo: {
+        file: "yourlogo.png",
+        position: "top-right",
+        link: "#"
+      }
+    });
+  </script>
 </body>
 </html>
