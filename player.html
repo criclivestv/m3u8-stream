@@ -48,7 +48,8 @@ const player = jwplayer('player').setup({
   file: videoUrl,
   width: '100%',
   height: '100%',
-  autostart: true,
+  autostart: true,   // ভিডিও চালু হবে
+  mute: false,       // সাউন্ডও চালু থাকবে
   controls: true
 });
 
