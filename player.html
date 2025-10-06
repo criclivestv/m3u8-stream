@@ -3,54 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JW Player</title>
+<title>Full Page Video Player</title>
 <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
 <style>
-body{margin:0;padding:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;}
-#player{width:100%;max-width:900px;aspect-ratio:16/9;position:relative;}
+html, body {
+  margin:0; padding:0;
+  width:100%; height:100%;
+  background:#000; overflow:hidden;
+}
+#player { width:100%; height:100%; }
+.overlay {
+  position:absolute;
+  z-index:999;
+  pointer-events:none;
+}
+.overlay img { display:block; max-width:100%; height:auto; }
+.overlay-text {
+  color:white;
+  font-size:20px;
+  text-shadow:1px 1px 3px rgba(0,0,0,0.7);
+}
 </style>
 </head>
 <body>
+
 <div id="player"></div>
 
 <script>
+// Get URL parameters from index.html
 const params = new URLSearchParams(window.location.search);
-const url = params.get('url');
+const videoUrl = params.get('url');
 const logoOn = params.get('logoOn')==='1';
 const logo = params.get('logo');
-const logoPos = params.get('logoPos');
-const logoSize = parseInt(params.get('logoSize')||120);
-const logoOpacity = parseFloat(params.get('logoOpacity')||1);
+const logoPos = params.get('logoPos') || 'top-left';
+const logoSize = parseInt(params.get('logoSize')) || 120;
+const logoOpacity = parseFloat(params.get('logoOpacity')) || 0.85;
 const wmOn = params.get('wmOn')==='1';
-const wm = params.get('wm');
-const wmPos = params.get('wmPos');
-const wmOpacity = parseFloat(params.get('wmOpacity')||0.6);
+const wm = params.get('wm') || '';
+const wmPos = params.get('wmPos') || 'top-left';
+const wmOpacity = parseFloat(params.get('wmOpacity')) || 0.75;
 
-// JW Player setup
-const config = {file:url,width:'100%',aspectratio:'16:9',autostart:false};
-if(logoOn && logo){
-  config.logo={file:logo,position:logoPos,width:logoSize,opacity:logoOpacity};
-}
-jwplayer('player').setup(config);
+// Setup JW Player
+const player = jwplayer('player').setup({
+  file: videoUrl,
+  width: '100%',
+  height: '100%',
+  autostart: true,
+  controls: true
+});
 
-// Watermark
-if(wmOn && wm){
-  const overlay = document.createElement('div');
-  overlay.textContent = wm;
-  overlay.style.position='absolute';
-  overlay.style.color='white';
-  overlay.style.fontSize='20px';
-  overlay.style.opacity=wmOpacity;
-  overlay.style.pointerEvents='none';
-  overlay.style.textShadow='1px 1px 3px rgba(0,0,0,0.7)';
-  if(wmPos==='center'){overlay.style.top='50%';overlay.style.left='50%';overlay.style.transform='translate(-50%,-50%)';}
-  else{
-    const [v,h]=wmPos.split('-');
-    overlay.style[v]='10px';
-    overlay.style[h]='10px';
+// Add Logo & Watermark overlays when player is ready
+player.on('ready', function(){
+  const container = player.getContainer();
+
+  // Logo overlay
+  if(logoOn && logo){
+    const logoDiv = document.createElement('div');
+    logoDiv.className='overlay';
+    logoDiv.style.opacity = logoOpacity;
+    const img = document.createElement('img');
+    img.src = logo;
+    img.style.width = logoSize+'px';
+    logoDiv.appendChild(img);
+
+    switch(logoPos){
+      case 'top-left': logoDiv.style.top='10px'; logoDiv.style.left='10px'; break;
+      case 'top-right': logoDiv.style.top='10px'; logoDiv.style.right='10px'; break;
+      case 'bottom-left': logoDiv.style.bottom='10px'; logoDiv.style.left='10px'; break;
+      case 'bottom-right': logoDiv.style.bottom='10px'; logoDiv.style.right='10px'; break;
+      case 'center': logoDiv.style.top='50%'; logoDiv.style.left='50%'; logoDiv.style.transform='translate(-50%,-50%)'; break;
+    }
+
+    container.appendChild(logoDiv);
   }
-  document.getElementById('player').appendChild(overlay);
-}
+
+  // Watermark overlay
+  if(wmOn && wm){
+    const wmDiv = document.createElement('div');
+    wmDiv.className='overlay overlay-text';
+    wmDiv.textContent = wm;
+    wmDiv.style.opacity = wmOpacity;
+
+    switch(wmPos){
+      case 'top-left': wmDiv.style.top='10px'; wmDiv.style.left='10px'; break;
+      case 'top-right': wmDiv.style.top='10px'; wmDiv.style.right='10px'; break;
+      case 'bottom-left': wmDiv.style.bottom='10px'; wmDiv.style.left='10px'; break;
+      case 'bottom-right': wmDiv.style.bottom='10px'; wmDiv.style.right='10px'; break;
+      case 'center': wmDiv.style.top='50%'; wmDiv.style.left='50%'; wmDiv.style.transform='translate(-50%,-50%)'; break;
+    }
+
+    container.appendChild(wmDiv);
+  }
+});
 </script>
+
 </body>
 </html>
