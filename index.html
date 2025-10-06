@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M3U8 / DASH Player Generator</title>
+<title>JW Player Generator</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
 body{
@@ -62,21 +63,11 @@ button{
 </head>
 <body>
 <div class="container">
-  <h1>🎬 M3U8 / DASH Player Generator</h1>
+  <h1>🎬 JW Player Generator</h1>
 
   <div class="form-group">
-    <label>Video URL (.m3u8 / .mpd):</label>
-    <input type="text" id="videoUrl" placeholder="Enter video stream URL">
-  </div>
-
-  <!-- DRM -->
-  <div class="form-group">
-    <label>DRM Key ID:</label>
-    <input type="text" id="keyId" placeholder="Optional Key ID">
-  </div>
-  <div class="form-group">
-    <label>DRM Key Value:</label>
-    <input type="text" id="keyValue" placeholder="Optional Key">
+    <label>Video URL (.m3u8 / .mp4):</label>
+    <input type="text" id="videoUrl" placeholder="Enter your video link">
   </div>
 
   <!-- Logo Controls -->
@@ -148,14 +139,11 @@ button{
 
 <script>
 const videoUrlEl = document.getElementById('videoUrl');
-const keyIdEl = document.getElementById('keyId');
-const keyValueEl = document.getElementById('keyValue');
 const previewLogo = document.getElementById('previewLogo');
 const previewText = document.getElementById('previewText');
 const logoUrlEl = document.getElementById('logoUrl');
 const wmTextEl = document.getElementById('wmText');
 
-// Live preview
 logoUrlEl.addEventListener('input',()=>{
   const val = logoUrlEl.value.trim();
   if(val){ previewLogo.src = val; previewLogo.style.display='block'; }
@@ -167,41 +155,64 @@ wmTextEl.addEventListener('input',()=>{
   else previewText.style.display='none';
 });
 
-// Auto-detect DRM if full link includes drmLicense
-videoUrlEl.addEventListener('input',()=>{
-  const link = videoUrlEl.value.trim();
-  if(link.includes('drmLicense=')){
-    try{
-      const drmPart = link.split('drmLicense=')[1];
-      const [kid,key] = drmPart.split(':');
-      if(kid && key){
-        keyIdEl.value = kid;
-        keyValueEl.value = key;
-      }
-    }catch(e){}
-  }
-});
-
 function generatePlayer(){
   const url = videoUrlEl.value.trim();
   if(!url){ alert('⚠️ Please enter a video URL'); return; }
 
-  const params = new URLSearchParams({
-    url,
-    keyId: keyIdEl.value.trim(),
-    keyValue: keyValueEl.value.trim(),
-    logoOn: document.getElementById('logoOn').checked ? 1 : 0,
-    logo: document.getElementById('logoUrl').value.trim(),
-    logoPos: document.getElementById('logoPos').value,
-    logoSize: document.getElementById('logoSize').value,
-    logoOpacity: document.getElementById('logoOpacity').value,
-    wmOn: document.getElementById('wmOn').checked ? 1 : 0,
-    wm: document.getElementById('wmText').value.trim(),
-    wmPos: document.getElementById('wmPos').value,
-    wmOpacity: document.getElementById('wmOpacity').value
-  });
+  const enableLogo = document.getElementById('logoOn').checked;
+  const logoUrl = document.getElementById('logoUrl').value.trim();
+  const logoPos = document.getElementById('logoPos').value;
+  const logoSize = parseInt(document.getElementById('logoSize').value);
+  const logoOpacity = parseInt(document.getElementById('logoOpacity').value)/100;
 
-  window.open('player.html?' + params.toString(), '_blank');
+  const enableWM = document.getElementById('wmOn').checked;
+  const wmText = document.getElementById('wmText').value.trim();
+  const wmPos = document.getElementById('wmPos').value;
+  const wmOpacity = parseInt(document.getElementById('wmOpacity').value)/100;
+
+  // Remove previous player if any
+  document.getElementById('previewLogo').style.display='none';
+  document.getElementById('previewText').style.display='none';
+
+  // Create Player
+  const playerDiv = document.createElement('div');
+  playerDiv.id = 'jwplayerDiv';
+  playerDiv.style.width = '100%';
+  playerDiv.style.aspectRatio = '16/9';
+  document.querySelector('.container').appendChild(playerDiv);
+
+  const config = {
+    file: url,
+    width: "100%",
+    aspectratio: "16:9",
+    autostart: false,
+  };
+  if(enableLogo && logoUrl){
+    config.logo = {file: logoUrl, position: logoPos, width: logoSize, opacity: logoOpacity};
+  }
+
+  jwplayer("jwplayerDiv").setup(config);
+
+  // Watermark overlay
+  if(enableWM && wmText){
+    const overlay = document.createElement('div');
+    overlay.textContent = wmText;
+    overlay.style.position = "absolute";
+    if(wmPos==='center'){ overlay.style.top='50%'; overlay.style.left='50%'; overlay.style.transform='translate(-50%,-50%)'; }
+    else{
+      const [v,h] = wmPos.split('-');
+      overlay.style[v]='10px';
+      overlay.style[h]='10px';
+    }
+    overlay.style.color='white';
+    overlay.style.fontSize='20px';
+    overlay.style.opacity=wmOpacity;
+    overlay.style.pointerEvents='none';
+    overlay.style.textShadow='1px 1px 3px rgba(0,0,0,0.7)';
+    document.getElementById('jwplayerDiv').appendChild(overlay);
+  }
+
+  alert('JW Player generated below the form!');
 }
 
 function resetForm(){
@@ -209,8 +220,10 @@ function resetForm(){
   document.querySelectorAll('input[type=checkbox]').forEach(i=>i.checked=false);
   previewLogo.style.display='none';
   previewText.style.display='none';
+  const existingPlayer = document.getElementById('jwplayerDiv');
+  if(existingPlayer) existingPlayer.remove();
   alert('Form reset successfully!');
 }
 </script>
 </body>
-      </html>
+  </html>
